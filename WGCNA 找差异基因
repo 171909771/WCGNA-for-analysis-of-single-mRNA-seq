@@ -1,0 +1,46 @@
+## 分析相关性差异
+Sys.setenv(R_MAX_NUM_DLLS=999)
+memory.limit(100000)
+
+library(WGCNA)
+load("prodat.Rdata")
+datExpr=prodat
+datExpr_hcm<-datExpr[,6:23]
+datExpr_ctrl<-datExpr[,1:5]
+
+hcm<-cbind(datExpr_hcm[,1],datExpr_ctrl)
+
+B<-transposeBigData(datExpr_ctrl)
+ctrl_A<-adjacency(B,
+                  selectCols = NULL,
+                  type = "unsigned",
+                  power = 1,
+                  corFnc = "cor", corOptions = list(use = "p", method='pearson'),
+                  weights = NULL)
+
+hcm_B<-transposeBigData(hcm)
+hcm_A<-adjacency(hcm_B,
+                 selectCols = NULL,
+                 type = "unsigned",
+                 power = 1,
+                 corFnc = "cor", corOptions = list(use = "p", method='pearson'),
+                 weights = NULL)
+
+for (i in 1:13131)
+{
+  for (j in (i+1):15103)
+  {
+    delta_p=hcm_A[i,j]-ctrl_A[i,j]
+    dominator=(1-ctrl_A[i,j]*ctrl_A[i,j])/4
+    x=c()
+    p=pnorm(abs(delta_p),mean=0,sd=dominator,lower.tail = FALSE, log.p = FALSE)
+    if(!is.na(p)&p<3.69e-10&ctrl_A[i,j]<1) #### p value 0.05/edges
+    {  
+      x=cbind(x,i,j,p,delta_p,ctrl_A[i,j])
+      write.table(x, file="HCM1_significant_deltaP.txt",sep = "\t",append = TRUE, row.names = FALSE,col.names = FALSE)  
+    }
+    
+  }
+}
+
+wcl= read.table("HCM1_significant_deltaP.txt")
