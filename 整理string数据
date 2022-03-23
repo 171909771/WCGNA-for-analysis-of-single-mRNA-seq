@@ -1,0 +1,11 @@
+# shell命令
+## download physical data and annotation data
+
+```{shell}
+# 处理physical data
+zcat 9606.protein.physical.links.full.v11.5.txt.gz|awk '$4>0 || $6>0' > prodata.txt
+cat prodata.txt|awk '{print $1 "\t" $2}'> cyto.tsv
+# 处理注释数据
+zcat 9606.protein.info.v11.5.txt.gz | awk '{print $1 "\t" $2}' > annotation
+
+```
