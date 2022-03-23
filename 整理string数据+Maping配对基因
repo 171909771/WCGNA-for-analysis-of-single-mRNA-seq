@@ -1,0 +1,36 @@
+
+## download physical data and annotation data
+
+```{shell}
+# 处理physical data
+## 只需要关注experiment和database大于0， transefered是其他物种的可以不要
+zcat 9606.protein.physical.links.full.v11.5.txt.gz|awk '$4>0 || $6>0' > prodata.txt
+cat prodata.txt|awk '{print $1 "\t" $2}'> cyto.tsv
+# 处理注释数据
+zcat 9606.protein.info.v11.5.txt.gz | awk '{print $1 "\t" $2}' > annotation
+
+```
+
+# 替换基因名字
+```{R}
+# string data 替换名字
+dat1= read.delim("cyto.tsv")
+dat2= read.delim("annotation")
+dat3=merge(dat1,dat2,by.x = "protein1", by.y = "X.string_protein_id" )
+dat4=merge(dat3,dat2,by.x = "protein2", by.y = "X.string_protein_id" )
+dat5=dat4[c(3,4)]
+dat6=dat5[c(2,1)]
+colnames(dat6)=c("node1","node2")
+write.table(dat6,file="human.tsv" ,row.names = F,sep = "\t")
+```
+
+
+# map to 正常人类基因连接
+## dat1是WGCNA得到的异常表达基因对
+dat1= read.table("dat1")
+hum1= read.table("data6",header = T)
+hum1$sum=paste(hum1$node1,hum1$node2)
+dat1$sum=paste(dat1$V1,dat1$V2)
+test1=merge(dat1,hum1)
+finalmerge=test1[c(4,5)]
+write.table(finalmerge,file="kankan.tsv",row.names = F,sep = "\t")
